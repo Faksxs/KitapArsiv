@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kitap Arşivi — Kütüphane 01–55 arama</title>
+<style>
+  :root{
+    --bg:#faf9f7; --ink:#16150f; --muted:#6b675e; --line:#e4e0d8;
+    --accent:#0b5f57; --accent-soft:#e6f1ef; --mark:#ffe9a8; --card:#fffefb;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--ink);
+    font:15px/1.55 "Inter",-apple-system,"Segoe UI",Roboto,system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:var(--accent)}
+  header{
+    position:sticky; top:0; z-index:10; background:rgba(250,249,247,.92);
+    backdrop-filter:saturate(1.4) blur(8px); border-bottom:1px solid var(--line);
+  }
+  .wrap{max-width:960px; margin:0 auto; padding:0 20px}
+  .top{display:flex; align-items:baseline; gap:14px; padding:14px 0 4px; flex-wrap:wrap}
+  .mark{font:600 19px/1 Georgia,"Times New Roman",serif; letter-spacing:.2px}
+  .mark span{color:var(--accent)}
+  .meta{font-size:12.5px; color:var(--muted)}
+  .bar{display:flex; gap:10px; padding:6px 0 14px}
+  input[type=search]{
+    flex:1; font:inherit; font-size:17px; padding:11px 14px;
+    border:1px solid var(--line); border-radius:10px; background:var(--card); color:var(--ink);
+    outline:none; transition:border-color .15s, box-shadow .15s;
+  }
+  input[type=search]:focus{border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft)}
+  select{
+    font:inherit; font-size:14px; padding:0 12px; border:1px solid var(--line);
+    border-radius:10px; background:var(--card); color:var(--ink); outline:none;
+  }
+  .stats{display:flex; justify-content:space-between; gap:12px; padding:0 0 10px;
+    font-size:13px; color:var(--muted); border-bottom:1px solid var(--line)}
+  .stats b{color:var(--ink); font-weight:600}
+  ol{list-style:none; margin:0; padding:0}
+  li.row{
+    display:grid; grid-template-columns:1fr auto; gap:4px 16px;
+    padding:13px 4px; border-bottom:1px solid var(--line);
+  }
+  li.row:hover{background:#fffdf6}
+  .ad{grid-column:1; grid-row:1; font-size:15.5px; line-height:1.4; word-break:break-word}
+  .ad a{text-decoration:none; color:var(--ink)}
+  .ad a:hover{color:var(--accent); text-decoration:underline}
+  .alt{grid-column:1; grid-row:2; font-size:12.5px; color:var(--muted); display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+  .badge{
+    display:inline-block; padding:1px 8px; border:1px solid var(--line);
+    border-radius:999px; background:var(--card); color:var(--accent); font-weight:600;
+    cursor:pointer;
+  }
+  .badge:hover{background:var(--accent-soft)}
+  .eylem{grid-column:2; grid-row:1 / 3; align-self:center; display:flex; gap:7px; flex-wrap:wrap; justify-content:flex-end}
+  .btn{
+    font:inherit; font-size:13px; padding:6px 11px; border-radius:8px; cursor:pointer;
+    border:1px solid var(--accent); background:var(--accent); color:#fff; text-decoration:none;
+    white-space:nowrap;
+  }
+  .btn.ghost{background:var(--card); color:var(--accent)}
+  .btn.ghost:hover{background:var(--accent-soft)}
+  .btn[disabled]{opacity:.45; cursor:not-allowed; border-color:var(--line); color:var(--muted); background:var(--card)}
+  mark{background:var(--mark); color:inherit; padding:0 1px; border-radius:2px}
+  .empty{padding:34px 4px; color:var(--muted); font-size:15px}
+  .empty b{color:var(--ink)}
+  .more{margin:18px 0 40px; text-align:center}
+  footer{border-top:1px solid var(--line); margin-top:34px; padding:18px 0 44px;
+    font-size:12.5px; color:var(--muted)}
+  footer a{color:var(--muted)}
+  kbd{font:12px ui-monospace,Consolas,monospace; border:1px solid var(--line);
+    border-bottom-width:2px; border-radius:4px; padding:0 5px; background:var(--card)}
+  @media (max-width:720px){
+    li.row{grid-template-columns:1fr}
+    .ad{grid-row:1}
+    .alt{grid-row:2}
+    .eylem{grid-column:1; grid-row:3; justify-content:flex-start}
+    .bar{flex-direction:column}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="top">
+      <div class="mark">Kitap<span>Arşivi</span></div>
+      <div class="meta">63.000+ tarama · Kütüphane 01–55 · yerel arama</div>
+    </div>
+    <div class="bar">
+      <input id="q" type="search" autofocus spellcheck="false" autocomplete="off"
+             placeholder="Yazar ya da kitap adı yazın — örn. tanpinar, beş şehir, schelling">
+      <select id="lib" aria-label="Kütüphane filtresi"><option value="">Tüm kütüphaneler</option></select>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="stats">
+    <div id="sayi">Aramaya başlamak için yazın</div>
+    <div id="sure"></div>
+  </div>
+  <ol id="liste"></ol>
+  <div class="more" id="daha" hidden><button class="btn ghost" id="dahaBtn">Daha fazla göster</button></div>
+</div>
+
+<footer>
+  <div class="wrap">
+    Veri: <a id="kaynak" target="_blank" rel="noopener">Google Sheet — Kütüphaneler 01-55</a> ·
+    Kütüphane klasörleri: <a href="https://www.reddit.com/r/secilmiskitap/comments/1k76y3m/ekitap_arsivi/" target="_blank" rel="noopener">r/secilmiskitap</a> ·
+    Güncelleme: <span id="tarih"></span> · Arama: <kbd>/</kbd> odaklanır, <kbd>Esc</kbd> temizler, <kbd>Enter</kbd> ilk sonucu açar
+  </div>
+</footer>
+
+<script src="data/arsiv.js"></script>
+<script>
+const A = window.ARSIV, KIT = A.kitaplar, LINK = A.kutuphaneler;
+const TR = {'ı':'i','İ':'i','ş':'s','Ş':'s','ğ':'g','Ğ':'g','ü':'u','Ü':'u','ö':'o','Ö':'o','ç':'c','Ç':'c'};
+const TRRE = /[ıİşŞğĞüÜöÖçÇ]/g;
+const fold = s => s.replace(TRRE, c => TR[c]).toLowerCase()
+  .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+  .replace(/[^a-z0-9]/g, ' ');
+
+const q = document.getElementById('q');
+const libSel = document.getElementById('lib');
+const liste = document.getElementById('liste');
+const sayi = document.getElementById('sayi');
+const sure = document.getElementById('sure');
+const daha = document.getElementById('daha');
+const dahaBtn = document.getElementById('dahaBtn');
+document.getElementById('kaynak').href = A.kaynak;
+document.getElementById('tarih').textContent = A.guncelleme;
+
+const sayilar = A.kutuphaneSayilari;
+Object.keys(sayilar).map(Number).sort((a, b) => a - b).forEach(n => {
+  const o = document.createElement('option');
+  o.value = n;
+  o.textContent = `Kütüphane ${n} (${sayilar[n]})`;
+  libSel.appendChild(o);
+});
+
+const LIMIT = 100;
+let sonuclar = [], gosterilen = 0, zaman;
+
+function ara() {
+  const t0 = performance.now();
+  const tokens = fold(q.value).split(' ').filter(Boolean);
+  const secim = libSel.value ? +libSel.value : 0;
+  if (!tokens.length && !secim) {
+    sonuclar = [];
+    liste.textContent = '';
+    daha.hidden = true;
+    sayi.textContent = `${KIT.length.toLocaleString('tr-TR')} kayıt indekslendi`;
+    sure.textContent = '';
+    return;
+  }
+  const bulunan = [];
+  for (let i = 0; i < KIT.length; i++) {
+    const r = KIT[i];
+    if (secim && r[2] !== secim) continue;
+    const kat = r[3];
+    let skor = 0, tam = true;
+    for (let k = 0; k < tokens.length; k++) {
+      const p = kat.indexOf(tokens[k]);
+      if (p < 0) { tam = false; break; }
+      skor += p;
+    }
+    if (tam) bulunan.push([skor, r[0].length, i]);
+  }
+  if (bulunan.length <= 5000) bulunan.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  sonuclar = bulunan;
+  ciz();
+  sure.textContent = `${(performance.now() - t0).toFixed(0)} ms`;
+}
+
+function ciz() {
+  const tokens = fold(q.value).split(' ').filter(Boolean);
+  const dilim = sonuclar.slice(0, gosterilen);
+  liste.textContent = '';
+  const frag = document.createDocumentFragment();
+  for (const [, , i] of dilim) frag.appendChild(satir(KIT[i], tokens));
+  liste.appendChild(frag);
+  daha.hidden = gosterilen >= sonuclar.length;
+  if (!sonuclar.length) {
+    const li = document.createElement('li');
+    li.className = 'empty';
+    li.innerHTML = '<b>Sonuç yok.</b> Yazımı sadeleştirebilir (nokta, virgül, yayinevi adı olmadan) ya da kütüphane filtresini kaldırabilirsiniz.';
+    liste.appendChild(li);
+  }
+  sayi.innerHTML = sonuclar.length
+    ? `<b>${sonuclar.length.toLocaleString('tr-TR')}</b> sonuç · ${dilim.length} gösteriliyor`
+    : '';
+}
+
+function satir(r, tokens) {
+  const [ad, boyut, lib] = r;
+  const li = document.createElement('li');
+  li.className = 'row';
+
+  const adDiv = document.createElement('div');
+  adDiv.className = 'ad';
+  adDiv.appendChild(isaretle(ad, r[3], tokens));
+  li.appendChild(adDiv);
+
+  const alt = document.createElement('div');
+  alt.className = 'alt';
+  const b1 = document.createElement('span');
+  b1.textContent = boyut;
+  alt.appendChild(b1);
+  const badge = document.createElement('span');
+  badge.className = 'badge';
+  badge.textContent = `Kütüphane ${lib}`;
+  badge.title = LINK[lib] ? 'Kütüphane klasörünü aç' : 'Bu kütüphanenin linki paylaşılmamış';
+  badge.onclick = () => LINK[lib] && open(LINK[lib], '_blank', 'noopener');
+  alt.appendChild(badge);
+  if (!LINK[lib]) {
+    const yok = document.createElement('span');
+    yok.textContent = 'link paylaşılmamış';
+    alt.appendChild(yok);
+  }
+  li.appendChild(alt);
+
+  const eylem = document.createElement('div');
+  eylem.className = 'eylem';
+  if (LINK[lib]) {
+    const dosya = document.createElement('a');
+    dosya.className = 'btn';
+    dosya.target = '_blank';
+    dosya.rel = 'noopener';
+    dosya.textContent = 'Dosyayı aç';
+    dosya.href = LINK[lib] + '/' + encodeURIComponent(ad);
+    eylem.appendChild(dosya);
+
+    const klasor = document.createElement('a');
+    klasor.className = 'btn ghost';
+    klasor.target = '_blank';
+    klasor.rel = 'noopener';
+    klasor.textContent = 'Klasör';
+    klasor.href = LINK[lib];
+    eylem.appendChild(klasor);
+  } else {
+    const yok = document.createElement('button');
+    yok.className = 'btn';
+    yok.disabled = true;
+    yok.textContent = 'Link yok';
+    eylem.appendChild(yok);
+  }
+  const kopya = document.createElement('button');
+  kopya.className = 'btn ghost';
+  kopya.textContent = 'Kopyala';
+  kopya.onclick = () => {
+    navigator.clipboard.writeText(ad).then(() => {
+      kopya.textContent = 'Kopyalandı';
+      setTimeout(() => (kopya.textContent = 'Kopyala'), 1200);
+    });
+  };
+  eylem.appendChild(kopya);
+  li.appendChild(eylem);
+  return li;
+}
+
+function isaretle(ad, kat, tokens) {
+  const frag = document.createDocumentFragment();
+  if (!tokens.length || kat.length !== ad.length) {
+    frag.appendChild(document.createTextNode(ad));
+    return frag;
+  }
+  const aralik = [];
+  for (const t of tokens) {
+    let p = kat.indexOf(t);
+    while (p !== -1 && aralik.length < 60) { aralik.push([p, p + t.length]); p = kat.indexOf(t, p + t.length); }
+  }
+  if (!aralik.length) { frag.appendChild(document.createTextNode(ad)); return frag; }
+  aralik.sort((a, b) => a[0] - b[0]);
+  const birlesik = [aralik[0].slice()];
+  for (const a of aralik.slice(1)) {
+    const son = birlesik[birlesik.length - 1];
+    if (a[0] <= son[1]) son[1] = Math.max(son[1], a[1]);
+    else birlesik.push(a.slice());
+  }
+  let i = 0;
+  for (const [b, s] of birlesik) {
+    if (b > i) frag.appendChild(document.createTextNode(ad.slice(i, b)));
+    const m = document.createElement('mark');
+    m.textContent = ad.slice(b, s);
+    frag.appendChild(m);
+    i = s;
+  }
+  if (i < ad.length) frag.appendChild(document.createTextNode(ad.slice(i)));
+  return frag;
+}
+
+q.addEventListener('input', () => {
+  clearTimeout(zaman);
+  gosterilen = LIMIT;
+  zaman = setTimeout(ara, 90);
+});
+libSel.addEventListener('change', () => { gosterilen = LIMIT; ara(); });
+dahaBtn.addEventListener('click', () => { gosterilen += LIMIT; ciz(); });
+document.addEventListener('keydown', e => {
+  if (e.key === '/' && document.activeElement !== q) { e.preventDefault(); q.focus(); q.select(); }
+  if (e.key === 'Escape') { q.value = ''; gosterilen = LIMIT; ara(); q.blur(); }
+  if (e.key === 'Enter' && document.activeElement === q && sonuclar.length) {
+    const [,,i] = sonuclar[0], r = KIT[i];
+    if (LINK[r[2]]) window.open(LINK[r[2]] + '/' + encodeURIComponent(r[0]), '_blank', 'noopener');
+  }
+});
+
+gosterilen = LIMIT;
+ara();
+</script>
+</body>
+</html>
